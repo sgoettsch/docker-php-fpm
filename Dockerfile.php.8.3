@@ -29,10 +29,12 @@ RUN docker-php-ext-enable redis
 
 # Install APCu
 # renovate: datasource=github-tags depName=krakjoe/apcu versioning=semver
-ENV PHP_APCU_VERSION="5.1.22"
+ENV PHP_APCU_VERSION="v5.1.22"
 
-RUN pecl install apcu-${PHP_APCU_VERSION}
+RUN pecl install apcu-${PHP_APCU_VERSION#"v"}
 RUN docker-php-ext-enable apcu
+
+RUN echo pecl info apcu
 
 EXPOSE 9000
 CMD ["php-fpm"]
