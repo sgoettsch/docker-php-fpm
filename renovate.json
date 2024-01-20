@@ -23,5 +23,15 @@
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["/Dockerfile$"],
+      "matchStrings": [
+        "ARG PHP_APCU_VERSION=[\"']?(?<currentValue>.+?)[\"']?\\s+"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "krakjoe/apcu"
+    }
   ]
 }
