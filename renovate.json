@@ -20,6 +20,7 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
+      "matchPackageNames": ["php"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     }
