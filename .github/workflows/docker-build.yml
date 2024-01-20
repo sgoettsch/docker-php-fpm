@@ -2,7 +2,7 @@ name: Docker image build
 
 on:
   push:
-    branches: [ "soon-master" ]
+    branches: [ "master" ]
 
 jobs:
   docker:
