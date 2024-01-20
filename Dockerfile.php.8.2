@@ -15,21 +15,21 @@ RUN docker-php-ext-install gd
 
 # Install Redis Dependency
 # renovate: datasource=github-tags depName=igbinary/igbinary versioning=semver
-ENV PHP_IGBINARY_VERSION 3.2.15
+ENV PHP_IGBINARY_VERSION="3.2.15"
 
 RUN pecl install igbinary-${PHP_IGBINARY_VERSION}
 RUN docker-php-ext-enable igbinary
 
 # Install Redis
 # renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver
-ENV PHP_REDIS_VERSION 6.0.0
+ENV PHP_REDIS_VERSION="6.0.0"
 
 RUN pecl install redis-${PHP_REDIS_VERSION}
 RUN docker-php-ext-enable redis
 
 # Install APCu
 # renovate: datasource=github-tags depName=krakjoe/apcu versioning=semver
-ENV PHP_APCU_VERSION 5.1.22
+ENV PHP_APCU_VERSION="5.1.22"
 
 RUN pecl install apcu-${PHP_APCU_VERSION}
 RUN docker-php-ext-enable apcu

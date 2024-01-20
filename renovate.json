@@ -4,7 +4,8 @@
     "config:recommended",
     "docker:pinDigests",
     ":disableDependencyDashboard",
-    "helpers:pinGitHubActionDigests"
+    "helpers:pinGitHubActionDigests",
+    "regexManagers:dockerfileVersions"
   ],
   "baseBranches": [
     "master"
@@ -21,30 +22,6 @@
     {
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
-    }, {
-      "matchStrings": [
-        "ENV PHP_IGBINARY_VERSION \"(?<currentValue>.*?)\""
-      ],
-      "depNameTemplate": "igbinary/igbinary",
-      "datasourceTemplate": "github-releases",
-      "matchUpdateTypes": ["major", "minor", "patch"],
-      "enabled": true
-    }, {
-      "matchStrings": [
-        "ENV PHP_REDIS_VERSION \"(?<currentValue>.*?)\""
-      ],
-      "depNameTemplate": "phpredis/phpredis",
-      "datasourceTemplate": "github-releases",
-      "matchUpdateTypes": ["major", "minor", "patch"],
-      "enabled": true
-    }, {
-      "matchStrings": [
-        "ENV PHP_APCU_VERSION \"(?<currentValue>.*?)\""
-      ],
-      "depNameTemplate": "krakjoe/apcu",
-      "datasourceTemplate": "github-releases",
-      "matchUpdateTypes": ["major", "minor", "patch"],
-      "enabled": true
     }
   ]
 }
