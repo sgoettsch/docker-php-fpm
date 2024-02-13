@@ -43,6 +43,5 @@ jobs:
           file: "${{ matrix.docker-file }}"
           load: true
           tags: "ghcr.io/sgoettsch/docker-php-fpm:latest${{ matrix.image-tag-suffix }}"
-          platforms: linux/amd64,linux/arm64
           cache-from: type=gha, scope=${{ github.workflow }}
           cache-to: type=gha, scope=${{ github.workflow }}
