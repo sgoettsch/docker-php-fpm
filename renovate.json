@@ -19,6 +19,7 @@
   "dependencyDashboard": false,
   "separateMinorPatch": true,
   "platformAutomerge": true,
+  "automergeType": "branch",
   "packageRules": [
     {
       "matchPackageNames": ["php"],
