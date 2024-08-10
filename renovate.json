@@ -27,7 +27,7 @@
       "enabled": false
     },
     {
-      "matchPackageNames": ["php"],
+      "matchPackageNames": ["php", "igbinary"],
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "automergeType": "branch"
