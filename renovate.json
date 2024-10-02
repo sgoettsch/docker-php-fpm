@@ -27,7 +27,7 @@
       "enabled": false
     },
     {
-      "matchPackageNames": ["php", "igbinary", "apcu"],
+      "matchPackageNames": ["php", "igbinary", "krakjoe/apcu"],
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "automergeType": "branch"
