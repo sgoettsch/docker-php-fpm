@@ -27,7 +27,7 @@
       "enabled": false
     },
     {
-      "matchPackageNames": ["php", "igbinary"],
+      "matchPackageNames": ["php", "igbinary", "apcu"],
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "automergeType": "branch"
