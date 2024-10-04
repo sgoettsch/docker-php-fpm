@@ -22,7 +22,7 @@ RUN docker-php-ext-enable igbinary
 
 # Install Redis
 # renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver
-ENV PHP_REDIS_VERSION="6.0.2"
+ENV PHP_REDIS_VERSION="6.1.0"
 
 RUN pecl install redis-${PHP_REDIS_VERSION}
 RUN docker-php-ext-enable redis
