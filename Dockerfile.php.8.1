@@ -3,9 +3,12 @@ FROM php:8.1.32-fpm@sha256:9711445cf92fbdeb42c4396ce4ad405ead54f38ff876d1093ec0a
 RUN pecl channel-update pecl.php.net
 
 RUN apt update
-RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev
+RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev libc-client-dev libkrb5-dev
 RUN docker-php-ext-install intl xml curl mbstring opcache mysqli pdo pdo_mysql sockets zip bcmath
-run docker-php-ext-configure zip
+RUN docker-php-ext-configure zip
+
+RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install imap
 
 # Install dependencies for GD and install GD with support for jpeg, png webp and freetype
 RUN apt install -y libjpeg-dev libpng-dev libwebp-dev libfreetype6-dev
@@ -35,6 +38,9 @@ RUN pecl install apcu-${PHP_APCU_VERSION#"v"}
 RUN docker-php-ext-enable apcu
 
 RUN echo pecl info apcu
+
+# Cleanup a bit
+RUN rm -r /var/lib/apt/lists/*
 
 EXPOSE 9000
 CMD ["php-fpm"]
