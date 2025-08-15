@@ -1,14 +1,11 @@
-FROM php:8.1.33-fpm@sha256:d584efa21809bd323e28c8099ca24a310f4d26c821537ceac955462d704f1b78
+FROM php:8.1.33-fpm@sha256:7757655f3537837c7031f90fc47b971f538b130302374ef06336e3452dc07580
 
 RUN pecl channel-update pecl.php.net
 
 RUN apt update
-RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev libc-client-dev libkrb5-dev
+RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev
 RUN docker-php-ext-install intl xml curl mbstring opcache mysqli pdo pdo_mysql sockets zip bcmath
 RUN docker-php-ext-configure zip
-
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install imap
 
 # Install dependencies for GD and install GD with support for jpeg, png webp and freetype
 RUN apt install -y libjpeg-dev libpng-dev libwebp-dev libfreetype6-dev
