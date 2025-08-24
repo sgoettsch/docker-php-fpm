@@ -1,4 +1,4 @@
-name: Docker image build
+name: Docker image build (parallel arch)
 
 on:
   push:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,8 +35,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (arm64 only)
-        if: matrix.arch == 'arm64'
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64' && runner.arch != 'ARM64'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
@@ -50,7 +50,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push by digest (linux/${{ matrix.arch }}, ${{ matrix.image.name }})
+      - name: Build and push single-arch image (linux/${{ matrix.arch }}, ${{ matrix.image.name }})
         id: build
         uses: docker/build-push-action@v6
         with:
@@ -64,14 +64,11 @@ jobs:
           sbom: false
           cache-from: type=gha,scope=${{ github.workflow }}-${{ matrix.image.name }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ github.workflow }}-${{ matrix.image.name }}-${{ matrix.arch }}
-          push-by-digest: true
 
       - name: Export digest artifact
         run: |
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          # Store fully-qualified refs so the merge job can use them directly
-          echo "${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}@${digest}" \
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}-${{ matrix.arch }}@${{ steps.build.outputs.digest }}" \
             > "/tmp/digests/${{ matrix.image.name }}-${{ matrix.arch }}.txt"
         shell: bash
 
@@ -113,6 +110,7 @@ jobs:
 
       - name: Create and push multi-arch manifest
         run: |
+          # Create a consolidated multi-arch tag without the per-arch suffix
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}"
           REFS=$(cat /tmp/digests/*.txt | tr '\n' ' ')
           echo "Creating manifest ${IMAGE} from:"
