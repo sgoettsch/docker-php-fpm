@@ -3,51 +3,119 @@ name: Docker image build
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - ".github/workflows/docker-build.yml"
+      - "Dockerfile.php.*"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_REPO: ${{ github.repository_owner }}/docker-php-fpm
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - docker-file: "./Dockerfile.php.8.1"
-            image-tag-suffix: "-php8.1"
-          - docker-file: "./Dockerfile.php.8.2"
-            image-tag-suffix: "-php8.2"
-          - docker-file: "./Dockerfile.php.8.3"
-            image-tag-suffix: "-php8.3"
-          - docker-file: "./Dockerfile.php.8.4"
-            image-tag-suffix: "-php8.4"
-
+        arch: [ amd64, arm64 ]
+        image:
+          - { name: "php8.1", file: "./Dockerfile.php.8.1" }
+          - { name: "php8.2", file: "./Dockerfile.php.8.2" }
+          - { name: "php8.3", file: "./Dockerfile.php.8.3" }
+          - { name: "php8.4", file: "./Dockerfile.php.8.4" }
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      - uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
-      - id: buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
-      - uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (arm64 only)
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+      - name: Build and push by digest (linux/${{ matrix.arch }}, ${{ matrix.image.name }})
+        id: build
+        uses: docker/build-push-action@v6
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ${{ matrix.docker-file }}
+          file: ${{ matrix.image.file }}
+          platforms: linux/${{ matrix.arch }}
           push: true
-          tags: ghcr.io/sgoettsch/docker-php-fpm:latest${{ matrix.image-tag-suffix }}
-          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=${{ github.workflow }}-${{ matrix.image.name }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ github.workflow }}-${{ matrix.image.name }}-${{ matrix.arch }}
+          push-by-digest: true
 
-          # Import from multiple caches
-          cache-from: |
-            type=gha,scope=${{ github.workflow }}-${{ matrix.image-tag-suffix }}
-            type=gha,scope=${{ github.workflow }}-${{ matrix.image-tag-suffix }}-main
-            type=registry,ref=ghcr.io/sgoettsch/docker-php-fpm:cache${{ matrix.image-tag-suffix }}
+      - name: Export digest artifact
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          # Store fully-qualified refs so the merge job can use them directly
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}@${digest}" \
+            > "/tmp/digests/${{ matrix.image.name }}-${{ matrix.arch }}.txt"
+        shell: bash
 
-          # Export caches
-          cache-to: |
-            type=gha,mode=max,scope=${{ github.workflow }}-${{ matrix.image-tag-suffix }}
-            type=registry,ref=ghcr.io/sgoettsch/docker-php-fpm:cache${{ matrix.image-tag-suffix }},mode=max,compression=zstd
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.image.name }}-${{ matrix.arch }}
+          path: /tmp/digests/*.txt
+          if-no-files-found: error
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - { name: "php8.1" }
+          - { name: "php8.2" }
+          - { name: "php8.3" }
+          - { name: "php8.4" }
+    steps:
+      - name: Download digests for ${{ matrix.image.name }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digests-${{ matrix.image.name }}-*
+          merge-multiple: true
+          path: /tmp/digests
+
+      - name: Set up Buildx (for imagetools)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:latest-${{ matrix.image.name }}"
+          REFS=$(cat /tmp/digests/*.txt | tr '\n' ' ')
+          echo "Creating manifest ${IMAGE} from:"
+          echo "${REFS}"
+          docker buildx imagetools create -t "${IMAGE}" ${REFS}
+        shell: bash
