@@ -33,18 +33,18 @@ jobs:
           - { name: "php8.4", file: "./Dockerfile.php.8.4" }
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Set up QEMU
         if: matrix.arch == 'arm64' && runner.arch != 'ARM64'
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
 
       - name: Set up Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build and push single-arch image (linux/${{ matrix.arch }}, ${{ matrix.image.name }})
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -73,7 +73,7 @@ jobs:
         shell: bash
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: digests-${{ matrix.image.name }}-${{ matrix.arch }}
           path: /tmp/digests/*.txt
@@ -92,17 +92,17 @@ jobs:
           - { name: "php8.4" }
     steps:
       - name: Download digests for ${{ matrix.image.name }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: digests-${{ matrix.image.name }}-*
           merge-multiple: true
           path: /tmp/digests
 
       - name: Set up Buildx (for imagetools)
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
