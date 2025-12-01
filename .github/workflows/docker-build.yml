@@ -31,6 +31,7 @@ jobs:
           - { name: "php8.2", file: "./Dockerfile.php.8.2" }
           - { name: "php8.3", file: "./Dockerfile.php.8.3" }
           - { name: "php8.4", file: "./Dockerfile.php.8.4" }
+          - { name: "php8.5", file: "./Dockerfile.php.8.5" }
     steps:
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
@@ -90,6 +91,7 @@ jobs:
           - { name: "php8.2" }
           - { name: "php8.3" }
           - { name: "php8.4" }
+          - { name: "php8.5" }
     steps:
       - name: Download digests for ${{ matrix.image.name }}
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
