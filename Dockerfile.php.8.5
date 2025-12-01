@@ -1,0 +1,40 @@
+FROM php:8.5.0-fpm
+
+RUN pecl channel-update pecl.php.net
+
+RUN apt update
+RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev
+RUN docker-php-ext-install intl xml curl mbstring mysqli pdo pdo_mysql sockets zip bcmath
+RUN docker-php-ext-configure zip
+
+# Install dependencies for GD and install GD with support for jpeg, png webp and freetype
+RUN apt install -y libjpeg-dev libpng-dev libwebp-dev libfreetype6-dev
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype
+RUN docker-php-ext-install gd
+
+# Install Redis Dependency
+# renovate: datasource=github-tags depName=igbinary/igbinary versioning=semver
+ENV PHP_IGBINARY_VERSION="3.2.17RC1"
+
+RUN pecl install igbinary-${PHP_IGBINARY_VERSION}
+RUN docker-php-ext-enable igbinary
+
+# Install Redis
+# renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver
+ENV PHP_REDIS_VERSION="6.3.0"
+
+RUN pecl install redis-${PHP_REDIS_VERSION}
+RUN docker-php-ext-enable redis
+
+# Install APCu
+# renovate: datasource=github-tags depName=krakjoe/apcu versioning=semver
+ENV PHP_APCU_VERSION="v5.1.27"
+
+RUN pecl install apcu-${PHP_APCU_VERSION#"v"}
+RUN docker-php-ext-enable apcu
+
+RUN echo pecl info apcu
+
+EXPOSE 9000
+CMD ["php-fpm"]
