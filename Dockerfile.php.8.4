@@ -1,6 +1,6 @@
-FROM php:8.4.18-fpm@sha256:c7b96db98a14b31ed44e079d0c5011c4b4dd52fe453a7725ee611e4a6c16063f
+FROM ghcr.io/php/pie:bin AS pie-installer
 
-RUN pecl channel-update pecl.php.net
+FROM php:8.4.18-fpm@sha256:c7b96db98a14b31ed44e079d0c5011c4b4dd52fe453a7725ee611e4a6c16063f
 
 RUN apt update
 RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev
@@ -14,27 +14,25 @@ RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype
 RUN docker-php-ext-install gd
 
 # Install Redis Dependency
-# renovate: datasource=github-tags depName=igbinary/igbinary versioning=semver
-ENV PHP_IGBINARY_VERSION="3.2.16"
+# renovate: datasource=github-tags depName=igbinary/igbinary  versioning=semver
+ENV PHP_IGBINARY_VERSION="3.2.17RC1"
 
-RUN pecl install igbinary-${PHP_IGBINARY_VERSION}
-RUN docker-php-ext-enable igbinary
+RUN --mount=type=bind,from=pie-installer,source=/pie,target=/usr/local/bin/pie \
+    pie install igbinary/igbinary:${PHP_IGBINARY_VERSION}
 
 # Install Redis
 # renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver
 ENV PHP_REDIS_VERSION="6.3.0"
 
-RUN pecl install redis-${PHP_REDIS_VERSION}
-RUN docker-php-ext-enable redis
+RUN --mount=type=bind,from=pie-installer,source=/pie,target=/usr/local/bin/pie \
+    pie install phpredis/phpredis:${PHP_REDIS_VERSION}
 
 # Install APCu
-# renovate: datasource=github-tags depName=krakjoe/apcu versioning=semver
+# renovate: datasource=github-tags depName=apcu/apcu versioning=semver
 ENV PHP_APCU_VERSION="v5.1.28"
 
-RUN pecl install apcu-${PHP_APCU_VERSION#"v"}
-RUN docker-php-ext-enable apcu
-
-RUN echo pecl info apcu
+RUN --mount=type=bind,from=pie-installer,source=/pie,target=/usr/local/bin/pie \
+    pie install apcu/apcu:${PHP_APCU_VERSION}
 
 EXPOSE 9000
 CMD ["php-fpm"]
