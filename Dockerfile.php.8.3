@@ -1,6 +1,6 @@
 FROM ghcr.io/php/pie:bin@sha256:e166f4c940cf8e033f1bfeeb017523be5071a9a6bd15acf94009d9693115ff4d AS pie-installer
 
-FROM php:8.3.31-fpm@sha256:b68416d6e4d7e66fccae2ce6871276f2d7c95006a00e6c696aa53f560a965032
+FROM php:8.3.31-fpm@sha256:2cc6dd4f94118d1718a78cd9d270a16a2b73a8342688e24325a297504b9bc3fa
 
 RUN apt update
 RUN apt install -y zlib1g-dev g++ libicu-dev libzip-dev zip libpq-dev libxml2-dev libcurl4-openssl-dev libonig-dev
